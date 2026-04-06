@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { descritores, Descritor } from '../data/descritores';
-import { Search, Loader2, Play, AlertCircle, Cpu } from 'lucide-react';
+import { descritores } from '../data/descritores';
+import type { Descritor } from '../data/descritores';
+import { Search, Loader2, Play, AlertCircle, Cpu, Sparkles } from 'lucide-react';
 
 export default function Descritores() {
   const navigate = useNavigate();

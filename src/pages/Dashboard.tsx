@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Play, Sparkles, Filter, AlertCircle, ChevronRight } from 'lucide-react';
+import { Plus, Play, Sparkles, Filter, AlertCircle, ChevronRight, Layers } from 'lucide-react';
 import { descritores } from '../data/descritores';
 
 export default function Dashboard() {

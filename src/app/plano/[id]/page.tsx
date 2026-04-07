@@ -1,10 +1,11 @@
 import { CheckCircle, Clock } from "lucide-react";
 
-export default function PlanoDeAulaDetalhe({ params }: { params: { id: string } }) {
+export default async function PlanoDeAulaDetalhe({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-20">
       <div className="text-red-500 text-xs font-bold text-center py-2 bg-red-100/10 w-full animate-pulse rounded border border-red-500/20">
-         [ MOCKUP ]: O conteúdo deste plano (ID: {params.id}) é fictício. O app deve fazer um request à API do Supabase (ou ler via props) pelo plano real gerado pela IA (Gemini) correspondente a esse ID.
+         [ MOCKUP ]: O conteúdo deste plano (ID: {resolvedParams.id}) é fictício. O app deve fazer um request à API do Supabase (ou ler via props) pelo plano real gerado pela IA (Gemini) correspondente a esse ID.
       </div>
       
       <div className="border-b border-white/10 pb-6">

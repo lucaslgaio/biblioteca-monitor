@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Printer, CheckCircle, ArrowLeft, Lightbulb, Clock, BookOpen, AlertTriangle, PlayCircle } from 'lucide-react';
+import { Printer, CheckCircle, ArrowLeft, Lightbulb, Clock, BookOpen, AlertTriangle, PlayCircle, Save, X, Sparkles } from 'lucide-react';
 
 export default function PlanoDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [planoRaw, setPlanoRaw] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // States para o Registro Rápido (30s)
+  const [modalRegistro, setModalRegistro] = useState(false);
+  const [notasAula, setNotasAula] = useState('');
+  const [salvandoRegistro, setSalvandoRegistro] = useState(false);
+  const [registroFeito, setRegistroFeito] = useState(false);
+  const [forcarRegistro, setForcarRegistro] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -20,6 +27,28 @@ export default function PlanoDetalhe() {
           
         if (error) throw error;
         setPlanoRaw(data);
+
+        // Verifica se a aula foi ministrada e se já possui registro
+        if (data.usage_type !== 'apenas_estudo') {
+           // Tenta buscar o registro
+           const { data: logData, error: logErr } = await supabase
+             .from('class_logs')
+             .select('id')
+             .eq('lesson_plan_id', id)
+             .maybeSingle();
+
+           if (!logErr && logData) {
+             setRegistroFeito(true);
+           } else {
+             // Se não encontrou registro e a aula devia ter sido registrada, forçamos o modal a abrir
+             setModalRegistro(true);
+             setForcarRegistro(true);
+           }
+        } else {
+           // Apenas estudo, não precisa registrar
+           setRegistroFeito(true);
+        }
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -28,6 +57,32 @@ export default function PlanoDetalhe() {
     }
     carregar();
   }, [id]);
+
+  const salvarRegistro = async () => {
+    if (!notasAula.trim()) return;
+    setSalvandoRegistro(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.from('class_logs').insert({
+        lesson_plan_id: id,
+        class_identifier: planoRaw.turmas?.nome || 'Desconhecida',
+        monitor_id: userData.user?.id,
+        notes: notasAula
+      });
+
+      if (error) throw error;
+      
+      setRegistroFeito(true);
+      setModalRegistro(false);
+      setForcarRegistro(false);
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar o registro da aula.');
+    } finally {
+      setSalvandoRegistro(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -43,7 +98,7 @@ export default function PlanoDetalhe() {
 
   const { titulo, finalidade, habilidade_bncc, objetos_conhecimento, objetivos_aprendizagem, 
           competencias_gerais, duracao_total_minutos, etapas, atividade_desafio_parana, 
-          materiais_apoio, adaptacoes, como_avaliar } = planoRaw.conteudo_json;
+          materiais_apoio, adaptacoes, como_avaliar } = planoRaw.conteudo_json || {};
 
   return (
     <div className="fade-in max-w-4xl mx-auto pb-20">
@@ -58,21 +113,36 @@ export default function PlanoDetalhe() {
             <Printer className="w-4 h-4" />
             Imprimir
           </button>
-          <button className="btn btn-primary">
-            <CheckCircle className="w-4 h-4" />
-            Registrar Aula
-          </button>
+          {!registroFeito && (
+            <button onClick={() => setModalRegistro(true)} className="btn btn-primary bg-primary text-white">
+              <CheckCircle className="w-4 h-4" />
+              Registrar Aula
+            </button>
+          )}
+          {registroFeito && planoRaw.usage_type !== 'apenas_estudo' && (
+            <button disabled className="btn btn-ghost text-green-600 bg-green-50 border-green-200">
+              <CheckCircle className="w-4 h-4" />
+              Aula Registrada
+            </button>
+          )}
         </div>
       </div>
 
       {/* Cabeçalho */}
       <div className="bg-surface border border-border rounded-t-xl p-8 shadow-sm">
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="badge badge-purple">{planoRaw.codigo_descritor}</span>
-          <span className="badge badge-blue">{planoRaw.turmas?.nome}</span>
-          <span className="badge bg-surface border-border text-text-muted">
-            <Clock className="w-3 h-3 mr-1 inline" /> {duracao_total_minutos} min
-          </span>
+        <div className="flex flex-wrap gap-2 mb-4 justify-between items-start">
+          <div className="flex flex-wrap gap-2">
+            <span className="badge badge-purple">{planoRaw.codigo_descritor}</span>
+            <span className="badge badge-blue">{planoRaw.turmas?.nome}</span>
+            <span className="badge bg-surface border-border text-text-muted">
+              <Clock className="w-3 h-3 mr-1 inline" /> {duracao_total_minutos} min
+            </span>
+          </div>
+          {/* Badge de Verificação BNCC */}
+          <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full border border-green-200 text-xs font-bold shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 fill-green-500 text-green-500" />
+            Estruturado com base na BNCC
+          </div>
         </div>
         
         <h1 className="text-3xl font-bold mb-3 text-text leading-tight">{titulo}</h1>
@@ -80,8 +150,8 @@ export default function PlanoDetalhe() {
 
         <div className="flex flex-wrap gap-x-8 gap-y-4 pt-4 border-t border-border">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-text-muted block mb-1">BNCC</span>
-            <span className="text-sm font-medium">{habilidade_bncc || 'N/A'}</span>
+             <span className="text-xs font-bold uppercase tracking-wider text-text-muted block mb-1">Cód. Habilidade BNCC</span>
+             <span className="text-sm font-medium bg-gray-100 px-2 py-1 rounded inline-block">{habilidade_bncc || 'Não informado'}</span>
           </div>
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-text-muted block mb-1">Objetivos ({objetivos_aprendizagem?.length || 0})</span>
@@ -92,6 +162,14 @@ export default function PlanoDetalhe() {
         </div>
       </div>
 
+      {planoRaw.usage_type === 'apenas_estudo' && (
+         <div className="bg-blue-50 text-blue-800 p-4 border border-blue-200 flex items-center gap-3">
+           <BookOpen className="w-5 h-5 text-blue-500 shrink-0" />
+           <p className="text-sm">Este material foi gerado com a marcação <strong>Apenas Estudo</strong>, portanto não exige um registro de aplicação na turma.</p>
+         </div>
+      )}
+
+      {/* Restante da Timeline de forma inalterada */}
       {/* Sugestão Desafio Paraná */}
       {atividade_desafio_parana && (
         <div className="bg-success-light border border-[#a8d07a] rounded-b-xl p-5 border-t-0 flex items-start gap-4">
@@ -108,7 +186,6 @@ export default function PlanoDetalhe() {
         </div>
       )}
 
-      {/* Timeline da Aula */}
       <div className="mt-8 relative">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
           <PlayCircle className="text-primary w-5 h-5" />
@@ -118,7 +195,6 @@ export default function PlanoDetalhe() {
         <div className="space-y-6">
           {etapas?.map((etapa: any, idx: number) => (
             <div key={idx} className="relative pl-6">
-              {/* Timeline dot */}
               <div className="absolute left-0 top-1 bottom-0 flex flex-col items-center">
                 <div className="timeline-dot" />
                 {idx !== etapas.length - 1 && <div className="timeline-line" />}
@@ -159,9 +235,7 @@ export default function PlanoDetalhe() {
         </div>
       </div>
 
-      {/* Blocos Finais */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        
         <div className="card shadow-sm h-full flex flex-col">
           <h2 className="text-sm font-bold flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-primary" /> Materiais
@@ -197,13 +271,67 @@ export default function PlanoDetalhe() {
              </div>
           </div>
         </div>
-        
       </div>
 
       <div className="card mt-4 shadow-sm">
         <h2 className="text-sm font-bold mb-2">Como Avaliar?</h2>
         <p className="text-sm border-l-2 border-primary pl-3 text-text-muted">{como_avaliar}</p>
       </div>
+
+      {/* M0DAL DE REGISTRO RÁPIDO */}
+      {modalRegistro && (
+        <div className="fixed inset-0 bg-text/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 fade-in">
+          <div className="bg-surface rounded-xl max-w-md w-full shadow-lg border border-border flex flex-col">
+            <div className="p-5 border-b border-border flex justify-between items-center bg-gray-50 rounded-t-xl">
+              <div>
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  Registro da Aula
+                </h2>
+                <p className="text-xs text-text-muted mt-1 leading-snug">
+                  Registre em 30 segundos como foi o desempenho da turma. O próximo monitor começará daqui.
+                </p>
+              </div>
+              {!forcarRegistro && (
+                <button onClick={() => setModalRegistro(false)} className="p-2 hover:bg-gray-200 rounded-lg text-text-muted self-start">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="p-5 space-y-4">
+              {forcarRegistro && (
+                 <div className="bg-warning-light text-warning p-3 rounded text-sm flex items-start gap-2 mb-2">
+                   <AlertTriangle className="w-5 h-5 shrink-0" />
+                   <p>Você precisa deixar o registro de como foi esta aula de hoje para ajudar a equipe pedagógica antes de prosseguir.</p>
+                 </div>
+              )}
+              
+              <div>
+                 <textarea 
+                   className="form-input min-h-[120px] resize-none"
+                   placeholder="Ex: A turma estava agitada, conseguimos ir até o exercício 3. Os alunos sentiram dificuldade nas frações mistas."
+                   value={notasAula}
+                   onChange={e => setNotasAula(e.target.value)}
+                 />
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-border flex gap-3">
+              {!forcarRegistro && (
+                <button onClick={() => setModalRegistro(false)} className="btn btn-ghost flex-1">Cancelar</button>
+              )}
+              <button 
+                onClick={salvarRegistro} 
+                disabled={salvandoRegistro || notasAula.trim().length < 5} 
+                className="btn btn-primary bg-primary text-white flex-1"
+              >
+                {salvandoRegistro ? <div className="spinner !w-4 !h-4" /> : <><Save className="w-4 h-4" /> Salvar Histórico</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

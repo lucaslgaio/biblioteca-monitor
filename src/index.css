@@ -1,23 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --color-primary: #185FA5;
-  --color-primary-light: #E6F1FB;
-  --color-primary-border: #378ADD;
-  --color-success: #3B6D11;
-  --color-success-light: #EAF3DE;
-  --color-warning: #854F0B;
+  /* Brand Primary Colors */
+  --color-primary: #0F62FE;
+  --color-primary-dark: #002D9C;
+  --color-primary-base: #001141;
+  --color-primary-light: #E8F1FF;
+  --color-primary-border: #0F62FE;
+  
+  /* Brand Secondary / Semantic Colors */
+  --color-success: #198038;
+  --color-success-light: #E8F5EB;
+  --color-warning: #D4A777;
   --color-warning-light: #FAEEDA;
-  --color-danger: #A32D2D;
-  --color-danger-light: #FCEBEB;
-  --color-purple: #534AB7;
-  --color-purple-light: #EEEDFE;
-  --color-bg: #F5F4F0;
+  --color-danger: #DA1E28;
+  --color-danger-light: #FCE8E8;
+  --color-purple: #8A3FFC;
+  --color-purple-light: #F4EBFF;
+  
+  /* Surface & Text */
+  --color-bg: #F7F9FC;
   --color-surface: #FFFFFF;
-  --color-border: #D3D1C7;
-  --color-text: #2C2C2A;
-  --color-text-muted: #5F5E5A;
+  --color-border: #E2E6EC;
+  --color-text: #001141;
+  --color-text-muted: #5F6B7E;
 }
 
 * {
@@ -27,12 +34,16 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .poppins-title {
+  font-family: 'Poppins', system-ui, sans-serif;
 }
 
 /* Scrollbar */
@@ -47,39 +58,54 @@ body {
   justify-content: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 8px; /* Mantém os cantos arredondados do app original mas refinado */
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .btn-primary {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-color: var(--color-primary-border);
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+  box-shadow: 0 1px 2px rgba(15, 98, 254, 0.2);
 }
-.btn-primary:hover { background: #d7e9f8; }
+.btn-primary:hover { 
+  background: var(--color-primary-dark); 
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 4px 6px -1px rgba(15, 98, 254, 0.3);
+}
 
 .btn-danger {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
-  border-color: #e5a5a5;
+  background: var(--color-danger);
+  color: #FFFFFF;
+  border-color: var(--color-danger);
+}
+.btn-danger:hover {
+  background: #B01019;
 }
 
 .btn-success {
-  background: var(--color-success-light);
-  color: var(--color-success);
-  border-color: #a8d07a;
+  background: var(--color-success);
+  color: #FFFFFF;
+  border-color: var(--color-success);
+}
+.btn-success:hover {
+  background: #116028;
 }
 
 .btn-desafio {
-  background: #E1F5EE;
-  color: #0F6E56;
-  border-color: #7dc8ae;
+  background: #007D79;
+  color: #FFFFFF;
+  border-color: #007D79;
+}
+.btn-desafio:hover {
+  background: #005F5A;
 }
 
 .btn-ghost {
@@ -87,72 +113,85 @@ body {
   color: var(--color-text-muted);
   border-color: var(--color-border);
 }
-.btn-ghost:hover { background: var(--color-bg); }
+.btn-ghost:hover { 
+  background: var(--color-bg); 
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+}
 
 .btn-purple {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
-  border-color: #a9a4df;
+  background: var(--color-purple);
+  color: #FFFFFF;
+  border-color: var(--color-purple);
+}
+.btn-purple:hover {
+  background: #6D24D6;
 }
 
 .card {
   background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px; /* Mais "arejado" */
+  box-shadow: 0 4px 12px rgba(0, 17, 65, 0.03); /* Leve sombra conectada ao primary-base */
 }
 
 .card-sm {
   background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  border-radius: 8px;
-  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 17, 65, 0.02);
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 99px;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 12px;
-  font-weight: 600;
-  border: 0.5px solid transparent;
+  font-weight: 500;
+  border: 1px solid transparent;
 }
 
 .badge-red {
   background: var(--color-danger-light);
   color: var(--color-danger);
-  border-color: #e5a5a5;
+  border-color: rgba(218, 30, 40, 0.2);
 }
 .badge-yellow {
   background: var(--color-warning-light);
-  color: var(--color-warning);
-  border-color: #d4a777;
+  color: #854F0B; /* Darker yellow for contrast */
+  border-color: rgba(212, 167, 119, 0.3);
 }
 .badge-green {
   background: var(--color-success-light);
   color: var(--color-success);
-  border-color: #a8d07a;
+  border-color: rgba(25, 128, 56, 0.2);
 }
 .badge-blue {
   background: var(--color-primary-light);
   color: var(--color-primary);
-  border-color: var(--color-primary-border);
+  border-color: rgba(15, 98, 254, 0.2);
 }
 
 .form-input {
   width: 100%;
-  padding: 8px 12px;
-  border: 0.5px solid var(--color-border);
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 14px;
   color: var(--color-text);
   background: var(--color-surface);
   outline: none;
-  transition: border-color 0.15s;
-  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  font-family: 'Montserrat', sans-serif;
 }
-.form-input:focus { border-color: var(--color-primary-border); }
+.form-input:focus { 
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
 
 .form-label {
   display: block;

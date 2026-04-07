@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { History, Calendar, CheckCircle, Search, Filter } from 'lucide-react';
+import { History, Calendar, Search, Filter, BookOpen, User } from 'lucide-react';
 
 export default function Registros() {
   const [registros, setRegistros] = useState<any[]>([]);
@@ -9,11 +9,18 @@ export default function Registros() {
 
   useEffect(() => {
     async function carregarRegistros() {
-      // Como não tem botão funcionando de "Registrar" 100% amarrado na outra tela, mockaremos ou traremos vazio caso não exista
+      // Buscar do Banco de Dados usando a nova tabela class_logs
       const { data, error } = await supabase
-        .from('registros_aulas')
-        .select('*, turmas(nome), planos_gerados(conteudo_json)')
-        .order('data_aula', { ascending: false });
+        .from('class_logs')
+        .select(`
+          id,
+          class_identifier,
+          notes,
+          created_at,
+          lesson_plan_id,
+          planos_gerados (conteudo_json, codigo_descritor, usage_type)
+        `)
+        .order('created_at', { ascending: false });
 
       if (data) setRegistros(data);
       setLoading(false);
@@ -22,16 +29,16 @@ export default function Registros() {
   }, []);
 
   const registrosFiltrados = registros.filter(r => 
-    !filtro || r.turmas?.nome?.toLowerCase().includes(filtro.toLowerCase()) || r.codigo_descritor?.toLowerCase().includes(filtro.toLowerCase())
+    !filtro || r.class_identifier?.toLowerCase().includes(filtro.toLowerCase()) || r.planos_gerados?.codigo_descritor?.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
     <div className="fade-in space-y-6 pb-20">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-           Histórico de Substituições
+           Histórico da Turma
         </h1>
-        <p className="text-sm text-text-muted mt-1">Acompanhe as aulas que você e outros monitores aplicaram na rede.</p>
+        <p className="text-sm text-text-muted mt-1">Acompanhe os recados deixados por quem aplicou aulas na rede ou veja o que a equipe pedagógica estudou.</p>
       </div>
 
       <div className="card shadow-sm mb-6 flex gap-4 items-center">
@@ -63,8 +70,8 @@ export default function Registros() {
               <tr className="bg-bg text-xs uppercase tracking-wider text-text-muted">
                 <th className="p-4 font-bold w-32 border-b border-border">Data</th>
                 <th className="p-4 font-bold border-b border-border">Turma</th>
-                <th className="p-4 font-bold border-b border-border">Conteúdo Gerado</th>
-                <th className="p-4 font-bold border-b border-border text-center">Status</th>
+                <th className="p-4 font-bold border-b border-border">Recado / Contexto Educacional</th>
+                <th className="p-4 font-bold border-b border-border text-center">Referência do Plano</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -73,21 +80,29 @@ export default function Registros() {
                   <td className="p-4 text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-text-muted" />
-                      {new Date(r.data_aula).toLocaleDateString('pt-BR')}
+                      {new Date(r.created_at).toLocaleDateString('pt-BR')}
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="badge badge-blue">{r.turmas?.nome || 'Turma Excluída'}</span>
+                    <span className="badge badge-blue">{r.class_identifier}</span>
                   </td>
-                  <td className="p-4 text-sm max-w-[250px] truncate">
-                    <span className="font-bold mr-2">{r.codigo_descritor}</span>
-                    <span className="text-text-muted">{r.planos_gerados?.conteudo_json?.titulo || 'Plano Manual'}</span>
+                  <td className="p-4 text-sm max-w-xl">
+                    <div className="flex items-start gap-2">
+                       <User className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                       <span className="text-text leading-snug">{r.notes}</span>
+                    </div>
                   </td>
                   <td className="p-4 text-center">
-                    <span className="badge bg-success-light text-success border-success/20">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Concluída
-                    </span>
+                    {r.planos_gerados ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="badge badge-purple">{r.planos_gerados.codigo_descritor}</span>
+                        {r.planos_gerados.usage_type === 'apenas_estudo' && (
+                           <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 rounded-full border border-blue-200">Apenas Estudo</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-text-muted text-xs">N/A</span>
+                    )}
                   </td>
                 </tr>
               ))}

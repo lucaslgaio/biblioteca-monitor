@@ -82,7 +82,7 @@ export default function Descritores() {
         .select('percentual_acerto')
         .eq('turma_id', turmaGeralSelecionada.id)
         .eq('codigo_descritor', descritorSelecionado.codigo)
-        .single();
+        .maybeSingle();
         
       const percentualAcerto = desempList ? desempList.percentual_acerto : 50;
 
@@ -129,7 +129,7 @@ export default function Descritores() {
     } catch (error: any) {
       console.error(error);
       clearInterval(interval);
-      setErro('Erro ao gerar plano com IA. Tente novamente mais tarde.');
+      setErro('Erro do Servidor/IA: ' + (error.message || JSON.stringify(error)));
       setLoading(false);
     }
   };
